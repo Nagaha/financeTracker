@@ -78,4 +78,7 @@ public class SavingService {
                 .build();
     }
 
+    public List<String> getAllGoals(User user) {
+        return savingRepository.findGoalsByUser(user);
+    }
 }

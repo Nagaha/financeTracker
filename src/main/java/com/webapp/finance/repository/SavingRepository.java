@@ -6,6 +6,7 @@ import com.webapp.finance.model.Saving;
 import com.webapp.finance.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -61,4 +62,7 @@ public interface SavingRepository extends JpaRepository<Saving, Long> {
     	    ORDER BY EXTRACT(DATE FROM s.savingDate)
     	""")
     	List<SavingResponse> savingsReport(User user, int month, int year);
+
+	@Query("select distinct s.goal from Saving s where s.user = :user")
+	List<String> findGoalsByUser(User user);
 }

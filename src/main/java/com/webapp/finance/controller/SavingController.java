@@ -41,4 +41,9 @@ public class SavingController {
     {
     	savingService.delete(id, user);
     }
+
+    @GetMapping("/goals")
+    public List<String> getAllGoals(@AuthenticationPrincipal User user) {
+        return savingService.getAllGoals(user);
+    }
 }
