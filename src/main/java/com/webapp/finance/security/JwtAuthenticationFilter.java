@@ -3,7 +3,6 @@ package com.webapp.finance.security;
 import com.webapp.finance.model.User;
 import com.webapp.finance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
