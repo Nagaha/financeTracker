@@ -5,9 +5,17 @@ import com.webapp.finance.exception.ApiException;
 import com.webapp.finance.model.*;
 import com.webapp.finance.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.tomcat.util.http.fileupload.ByteArrayOutputStream;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -84,5 +92,51 @@ public class ExpenseService {
                 e.getExpenseDate(),
                 e.getCategory().getName()
         );
+    }
+
+    public ByteArrayInputStream exportExpensesToExcel(List<ExpenseResponse> expenseList) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Expenses");
+
+        // Setting Headers
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"Category", "Amount Spent", "Description", "Spent Date"};
+
+        // Date cell type
+        CellStyle dateStyle = workbook.createCellStyle();
+        CreationHelper createHelper = workbook.getCreationHelper();
+        dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd-MM-yyyy"));
+
+
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        // Adding data
+        int rowIdx = 1;
+        for (ExpenseResponse expense : expenseList) {
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(expense.getCategoryName());
+            row.createCell(1).setCellValue(String.valueOf(expense.getAmount()));
+            row.createCell(2).setCellValue(expense.getDescription());
+            Cell dateCell = row.createCell(3);
+
+            LocalDate localDate = expense.getExpenseDate();
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+            dateCell.setCellValue(date);
+            dateCell.setCellStyle(dateStyle);
+        }
+
+        // Auto size cols
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+
+        return new ByteArrayInputStream(out.toByteArray());
     }
 }

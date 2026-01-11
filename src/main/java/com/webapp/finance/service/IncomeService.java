@@ -7,9 +7,17 @@ import com.webapp.finance.model.Income;
 import com.webapp.finance.model.User;
 import com.webapp.finance.repository.IncomeRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.tomcat.util.http.fileupload.ByteArrayOutputStream;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -78,4 +86,49 @@ public class IncomeService {
                 .build();
     }
 
+    public ByteArrayInputStream exportIncomesToExcel(List<IncomeResponse> incomeResponseList) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Expenses");
+
+        // Setting Headers
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"Source", "Amount", "Description", "Received Date"};
+
+        // Date Cell style
+        CellStyle dateStyle = workbook.createCellStyle();
+        CreationHelper createHelper = workbook.getCreationHelper();
+        dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd-MM-yyyy"));
+
+
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        // Adding data
+        int rowIdx = 1;
+        for (IncomeResponse income : incomeResponseList) {
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(income.getSource());
+            row.createCell(1).setCellValue(String.valueOf(income.getAmount()));
+            row.createCell(2).setCellValue(income.getDescription());
+            Cell dateCell = row.createCell(3);
+
+            LocalDate localDate = income.getIncomeDate();
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+            dateCell.setCellValue(date);
+            dateCell.setCellStyle(dateStyle);
+        }
+
+        // Auto size cols
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
 }
