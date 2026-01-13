@@ -51,13 +51,14 @@ public class ExpenseController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<InputStreamResource> exportExpenses(@AuthenticationPrincipal User user) throws IOException {
+        public ResponseEntity<InputStreamResource> exportExpenses(@AuthenticationPrincipal User user) throws IOException {
         List<ExpenseResponse> expenseList = expenseService.getAll(user);
 
         ByteArrayInputStream excelFile =
                 expenseService.exportExpensesToExcel(expenseList);
 
         HttpHeaders headers = new HttpHeaders();
+        // Tells to download the response instead of opening
         headers.add("Content-Disposition", "attachment; filename=expenses.xlsx");
 
         return ResponseEntity.ok()
